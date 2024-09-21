@@ -17,23 +17,27 @@ page = st.sidebar.radio('Go to', ['Demand', 'Open Access', 'Price', 'Solar', 'Wi
 guvnl_files = {
     'Demand': './Data/Demand_(Forecast).csv',
     'Open Access': './Data/Open_Access_(Forecast).csv',
-    'Price': './Data/Price.csv',
-    'Solar': './Data/Solar_Generation.csv',
-    'Wind': './Data/Wind_Generation.csv'
+    'Price': './Data/Price_(Forecast).csv',
+    'Solar': './Data/Solar_(Forecast).csv',
+    'Wind': './Data/Wind_(Forecast).csv'
 }
+
 
 async def fetch_data(file_path):
     async with aiofiles.open(file_path, mode='r') as f:
         data = await f.read()
         return pd.read_csv(io.StringIO(data))
 
+
 async def load_data():
     data = await fetch_data(guvnl_files[page])
-    data['TimeStamp'] = pd.to_datetime(data['TimeStamp'], format='%d-%m-%Y %H:%M', dayfirst=True)
+    data['TimeStamp'] = pd.to_datetime(data['TimeStamp'], format='%d/%m/%y %H:%M', dayfirst=True)
     data['Year'] = data['TimeStamp'].dt.year
     return data
 
+
 data = asyncio.run(load_data())
+
 
 def display_dashboard(title, y_columns, y_labels):
     st.title(title)
@@ -71,10 +75,15 @@ def display_dashboard(title, y_columns, y_labels):
     # Display detailed data in the second column without the index
     col2.write(filtered_data)
 
+
 if page == 'Demand':
-    display_dashboard('Demand Forecast Dashboard', ['Demand(Actual)', 'Demand(Pred)'], 'Actual vs Predicted Demand (MW)')
+    display_dashboard('Demand Forecast Dashboard', ['Demand(Actual)', 'Demand(Pred)'],
+                      'Actual vs Predicted Demand (MW)')
 elif page == 'Open Access':
-    display_dashboard('Open Access Forecast Dashboard', ['Actual', 'Pred'], 'Actual vs Predicted Open Access Demand (MW)')
+    display_dashboard('Open Access Forecast Dashboard', ['Actual', 'Pred'],
+                      'Actual vs Predicted Open Access Demand (MW)')
+elif page == 'Price':
+    display_dashboard('Price Forecast Dashboard', ['Price (Rs/ KWh)','Pred Price(Rs/ KWh)'], 'Actual vs Predicted Price (Rs/kWh)')
 else:
     st.title(f'{page} Data')
     st.write(data)
