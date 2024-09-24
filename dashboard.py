@@ -14,8 +14,8 @@ page = st.sidebar.radio('Go to', ['Demand', 'Open Access', 'Price', 'Solar', 'Wi
 
 guvnl_files = {
     'Demand': './Data/Demand_(Forecast).csv',
-    'Open Access': './Data/Open_Access_(Forecast).csv',
-    'Price': './Data/Price_(Forecast).csv',
+    'Open Access': './Data/Demand_(Forecast).csv',
+    'Price': './Data/Demand_(Forecast).csv',
     'Solar': './Data/Demand_(Forecast).csv',
     'Wind': './Data/Demand_(Forecast).csv'
 }
@@ -67,8 +67,11 @@ def display_dashboard(title, y_columns, y_labels, default_columns):
     # Drop the Year column from the detailed data
     filtered_data = filtered_data.reset_index().drop(columns=['Year'])
 
+    # Create a multiselect for column selection
+    columns_to_display = st.multiselect('Select columns to display', filtered_data.columns.tolist(), default=default_columns)
+
     # Display detailed data in the second column without the index
-    col2.write(filtered_data)
+    col2.write(filtered_data[columns_to_display])
 
 if page == 'Demand':
     display_dashboard('Demand Forecast Dashboard', ['Demand(Actual)', 'Demand(Pred)'],
