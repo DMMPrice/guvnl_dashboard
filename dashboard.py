@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import aiofiles
-import asyncio
 import io
 
 st.set_page_config(layout="wide")
@@ -18,39 +16,36 @@ guvnl_files = {
     'Demand': './Data/Demand_(Forecast).csv',
     'Open Access': './Data/Open_Access_(Forecast).csv',
     'Price': './Data/Price_(Forecast).csv',
-    'Solar': './Data/Solar_(Forecast).csv',
-    'Wind': './Data/Wind_(Forecast).csv'
+    'Solar': './Data/Demand_(Forecast).csv',
+    'Wind': './Data/Demand_(Forecast).csv'
 }
 
-
-async def fetch_data(file_path):
-    async with aiofiles.open(file_path, mode='r') as f:
-        data = await f.read()
+def fetch_data(file_path):
+    with open(file_path, mode='r') as f:
+        data = f.read()
         return pd.read_csv(io.StringIO(data))
 
-
-async def load_data():
-    data = await fetch_data(guvnl_files[page])
+def load_data():
+    data = fetch_data(guvnl_files[page])
     data['TimeStamp'] = pd.to_datetime(data['TimeStamp'], format='%d/%m/%y %H:%M', dayfirst=True)
     data['Year'] = data['TimeStamp'].dt.year
     return data
 
+data = load_data()
 
-data = asyncio.run(load_data())
-
-
-def display_dashboard(title, y_columns, y_labels):
+def display_dashboard(title, y_columns, y_labels, default_columns):
     st.title(title)
 
-    # Create a selectbox for year selection with "All years" option
-    years = ['All years'] + list(data['Year'].unique())
-    selected_year = st.selectbox('Select Year', years)
+    # Create a selectbox for FY year selection with "All FYs" option
+    years = ['All FYs'] + [f"{year} - {str(year + 1)[-2:]}" for year in data['Year'].unique()]
+    selected_year = st.selectbox('Select FY Year', years)
 
-    # Filter data based on selected year
-    if selected_year == 'All years':
+    # Filter data based on selected FY year
+    if selected_year == 'All FYs':
         filtered_data = data
     else:
-        filtered_data = data[data['Year'] == int(selected_year)]
+        year = int(selected_year.split(' - ')[0])
+        filtered_data = data[data['Year'] == year]
 
     # Resample data to hourly intervals
     filtered_data.set_index('TimeStamp', inplace=True)
@@ -60,8 +55,8 @@ def display_dashboard(title, y_columns, y_labels):
     fig = px.line(data_resampled, x='TimeStamp', y=y_columns,
                   labels={'value': 'Demand', 'TimeStamp': 'Time'},
                   title=y_labels)
-    fig.update_traces(line=dict(color='red'), selector=dict(name=y_columns[0]))
-    fig.update_traces(line=dict(color='blue'), selector=dict(name=y_columns[1]))
+    fig.update_traces(line=dict(color='rgb(235, 223, 190)'), selector=dict(name=y_columns[0]))
+    fig.update_traces(line=dict(color='#93dae6'), selector=dict(name=y_columns[1]))
 
     # Create two equal-width columns
     col1, col2 = st.columns([12, 5])
@@ -75,15 +70,21 @@ def display_dashboard(title, y_columns, y_labels):
     # Display detailed data in the second column without the index
     col2.write(filtered_data)
 
-
 if page == 'Demand':
     display_dashboard('Demand Forecast Dashboard', ['Demand(Actual)', 'Demand(Pred)'],
-                      'Actual vs Predicted Demand (MW)')
+                      'Actual vs Predicted Demand (MW)', ['TimeStamp', 'Demand(Actual)', 'Demand(Pred)'])
 elif page == 'Open Access':
     display_dashboard('Open Access Forecast Dashboard', ['Actual', 'Pred'],
-                      'Actual vs Predicted Open Access Demand (MW)')
+                      'Actual vs Predicted Open Access Demand (MW)', ['TimeStamp', 'Actual', 'Pred'])
 elif page == 'Price':
-    display_dashboard('Price Forecast Dashboard', ['Price (Rs/ KWh)','Pred Price(Rs/ KWh)'], 'Actual vs Predicted Price (Rs/kWh)')
+    display_dashboard('Price Forecast Dashboard', ['Price (Rs/ KWh)','Pred Price(Rs/ KWh)'],
+                      'Actual vs Predicted Price (Rs/kWh)', ['TimeStamp', 'Price (Rs/ KWh)', 'Pred Price(Rs/ KWh)'])
+elif page == 'Solar':
+    display_dashboard('Solar Forecast Dashboard', ['Solar(Actual)', 'Solar(Pred)'],
+                      'Actual vs Predicted Solar Generation (MW)', ['TimeStamp', 'Solar(Actual)', 'Solar(Pred)'])
+elif page == 'Wind':
+    display_dashboard('Wind Forecast Dashboard', ['Wind(Actual)', 'Wind(Pred)'],
+                      'Actual vs Predicted Wind Generation (MW)', ['TimeStamp', 'Wind(Actual)', 'Wind(Pred)'])
 else:
     st.title(f'{page} Data')
     st.write(data)
