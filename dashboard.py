@@ -6,7 +6,7 @@ import io
 st.set_page_config(layout="wide")
 
 # Add a main header
-st.header('GUVNL Dashboard')
+st.markdown("# [GUVNL Dashboard](https://dmmprice.github.io/GUVNL-PowerBI-Website/)")
 
 # Add sub-links in the sidebar
 st.sidebar.title('Navigation')
@@ -20,10 +20,12 @@ guvnl_files = {
     'Wind': './Data/Demand_(Forecast).csv'
 }
 
+
 def fetch_data(file_path):
     with open(file_path, mode='r') as f:
         data = f.read()
         return pd.read_csv(io.StringIO(data))
+
 
 def load_data():
     data = fetch_data(guvnl_files[page])
@@ -31,7 +33,9 @@ def load_data():
     data['Year'] = data['TimeStamp'].dt.year
     return data
 
+
 data = load_data()
+
 
 def display_dashboard(title, y_columns, y_labels, default_columns):
     st.title(title)
@@ -55,8 +59,8 @@ def display_dashboard(title, y_columns, y_labels, default_columns):
     fig = px.line(data_resampled, x='TimeStamp', y=y_columns,
                   labels={'value': 'Demand', 'TimeStamp': 'Time'},
                   title=y_labels)
-    fig.update_traces(line=dict(color='rgb(235, 223, 190)'), selector=dict(name=y_columns[0]))
     fig.update_traces(line=dict(color='#93dae6'), selector=dict(name=y_columns[1]))
+    fig.update_traces(line=dict(color='rgb(235, 223, 190)'), selector=dict(name=y_columns[0]))
 
     # Create two equal-width columns
     col1, col2 = st.columns([12, 5])
@@ -68,25 +72,27 @@ def display_dashboard(title, y_columns, y_labels, default_columns):
     filtered_data = filtered_data.reset_index().drop(columns=['Year'])
 
     # Create a multiselect for column selection
-    columns_to_display = st.multiselect('Select columns to display', filtered_data.columns.tolist(), default=default_columns)
+    columns_to_display = st.multiselect('Select columns to display', filtered_data.columns.tolist(),
+                                        default=default_columns)
 
     # Display detailed data in the second column without the index
     col2.write(filtered_data[columns_to_display])
 
+
 if page == 'Demand':
-    display_dashboard('Demand Forecast Dashboard', ['Demand(Actual)', 'Demand(Pred)'],
+    display_dashboard('Demand Forecast Dashboard', ['Demand(Pred)', 'Demand(Actual)'],
                       'Actual vs Predicted Demand (MW)', ['TimeStamp', 'Demand(Actual)', 'Demand(Pred)'])
 elif page == 'Open Access':
-    display_dashboard('Open Access Forecast Dashboard', ['Actual', 'Pred'],
+    display_dashboard('Open Access Forecast Dashboard', ['Pred', 'Actual'],
                       'Actual vs Predicted Open Access Demand (MW)', ['TimeStamp', 'Actual', 'Pred'])
 elif page == 'Price':
-    display_dashboard('Price Forecast Dashboard', ['Price (Rs/ KWh)','Pred Price(Rs/ KWh)'],
+    display_dashboard('Price Forecast Dashboard', ['Pred Price(Rs/ KWh)', 'Price (Rs/ KWh)'],
                       'Actual vs Predicted Price (Rs/kWh)', ['TimeStamp', 'Price (Rs/ KWh)', 'Pred Price(Rs/ KWh)'])
 elif page == 'Solar':
-    display_dashboard('Solar Forecast Dashboard', ['Solar(Actual)', 'Solar(Pred)'],
+    display_dashboard('Solar Forecast Dashboard', ['Solar(Pred)', 'Solar(Actual)'],
                       'Actual vs Predicted Solar Generation (MW)', ['TimeStamp', 'Solar(Actual)', 'Solar(Pred)'])
 elif page == 'Wind':
-    display_dashboard('Wind Forecast Dashboard', ['Wind(Actual)', 'Wind(Pred)'],
+    display_dashboard('Wind Forecast Dashboard', ['Wind(Pred)', 'Wind(Actual)'],
                       'Actual vs Predicted Wind Generation (MW)', ['TimeStamp', 'Wind(Actual)', 'Wind(Pred)'])
 else:
     st.title(f'{page} Data')
