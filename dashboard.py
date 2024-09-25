@@ -6,7 +6,8 @@ import io
 st.set_page_config(layout="wide")
 
 # Add a main header
-st.markdown("# [GUVNL Dashboard](https://dmmprice.github.io/GUVNL-PowerBI-Website/)")
+st.markdown("# [GUVNL Dashboard(Click on this link to download the Power BI)]("
+            "https://dmmprice.github.io/GUVNL-PowerBI-Website/)")
 
 # Add sub-links in the sidebar
 st.sidebar.title('Navigation')
